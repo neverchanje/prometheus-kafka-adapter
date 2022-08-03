@@ -13,22 +13,5 @@ test:
 	docker run --rm -v $(CURDIR):/app:z -w /app golang:$(MUSL_GO_VER) sh tools/testscript.sh vet
 	docker run --rm -v $(CURDIR):/app:z -w /app golang:$(MUSL_GO_VER) sh tools/testscript.sh test
 
-build: build-libc build-musl build-docker-image
-
-build-libc:
-	docker run --rm -v $(CURDIR):/app:z -w /app golang:$(LIBC_GO_VER) sh tools/buildscript.sh $(NAME)
-
-build-musl:
-	docker run --rm -v $(CURDIR):/app:z -w /app golang:$(MUSL_GO_VER) sh tools/buildscript.sh $(NAME)
-
 build-docker-image:
 	docker build -t telefonica/prometheus-kafka-adapter:latest .
-
-vendor-update:
-	rm -rf go.mod go.sum vendor/
-	docker run --rm -v $(CURDIR):/app:z -w /app golang:$(MUSL_GO_VER) go mod init $(PACKAGE_NAME)
-	docker run --rm -v $(CURDIR):/app:z -w /app golang:$(MUSL_GO_VER) go mod tidy
-	docker run --rm -v $(CURDIR):/app:z -w /app golang:$(MUSL_GO_VER) apk add --no-cache gcc musl-dev && go mod vendor
-
-clean:
-	rm -f $(NAME)-libc $(NAME)-musl

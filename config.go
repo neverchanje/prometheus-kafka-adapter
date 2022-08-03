@@ -16,12 +16,14 @@ package main
 
 import (
 	"fmt"
+	"os"
+	"strconv"
+	"strings"
+	"text/template"
+
 	dto "github.com/prometheus/client_model/go"
 	"github.com/prometheus/common/expfmt"
 	"gopkg.in/yaml.v2"
-	"os"
-	"strings"
-	"text/template"
 
 	"github.com/sirupsen/logrus"
 )
@@ -35,7 +37,7 @@ var (
 	basicauthUsername      = ""
 	basicauthPassword      = ""
 	kafkaCompression       = "none"
-	kafkaBatchNumMessages  = "10000"
+	kafkaBatchNumMessages  = 10000
 	kafkaSslClientCertFile = ""
 	kafkaSslClientKeyFile  = ""
 	kafkaSslClientKeyPass  = ""
@@ -77,7 +79,10 @@ func init() {
 	}
 
 	if value := os.Getenv("KAFKA_BATCH_NUM_MESSAGES"); value != "" {
-		kafkaBatchNumMessages = value
+		var err error
+		if kafkaBatchNumMessages, err = strconv.Atoi(value); err != nil {
+			panic(fmt.Sprint("KAFKA_BATCH_NUM_MESSAGES must be an integer: ", err))
+		}
 	}
 
 	if value := os.Getenv("KAFKA_SSL_CLIENT_CERT_FILE"); value != "" {

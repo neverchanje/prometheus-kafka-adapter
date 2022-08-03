@@ -15,21 +15,20 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"io/ioutil"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"github.com/sirupsen/logrus"
-
-	"github.com/confluentinc/confluent-kafka-go/kafka"
-	"github.com/golang/snappy"
-
 	"github.com/gogo/protobuf/proto"
+	"github.com/golang/snappy"
 	"github.com/prometheus/prometheus/prompb"
+	"github.com/segmentio/kafka-go"
+	"github.com/sirupsen/logrus"
 )
 
-func receiveHandler(producer *kafka.Producer, serializer Serializer) func(c *gin.Context) {
+func receiveHandler(writer *kafka.Writer, serializer Serializer) func(c *gin.Context) {
 	return func(c *gin.Context) {
 
 		httpRequestsTotal.Add(float64(1))
@@ -63,18 +62,12 @@ func receiveHandler(producer *kafka.Producer, serializer Serializer) func(c *gin
 		}
 
 		for topic, metrics := range metricsPerTopic {
-			t := topic
-			part := kafka.TopicPartition{
-				Partition: kafka.PartitionAny,
-				Topic:     &t,
-			}
 			for _, metric := range metrics {
 				objectsWritten.Add(float64(1))
-				err := producer.Produce(&kafka.Message{
-					TopicPartition: part,
-					Value:          metric,
-				}, nil)
-
+				err := writer.WriteMessages(context.Background(), kafka.Message{
+					Topic: topic,
+					Value: metric,
+				})
 				if err != nil {
 					objectsFailed.Add(float64(1))
 					c.AbortWithStatus(http.StatusInternalServerError)
@@ -84,6 +77,5 @@ func receiveHandler(producer *kafka.Producer, serializer Serializer) func(c *gin
 				}
 			}
 		}
-
 	}
 }
