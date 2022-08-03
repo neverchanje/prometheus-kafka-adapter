@@ -54,27 +54,24 @@ func receiveHandler(writer *kafka.Writer, serializer Serializer) func(c *gin.Con
 			return
 		}
 
-		metricsPerTopic, err := processWriteRequest(&req)
+		metrics, err := processWriteRequest(&req)
 		if err != nil {
 			c.AbortWithStatus(http.StatusInternalServerError)
 			logrus.WithError(err).Error("couldn't process write request")
 			return
 		}
 
-		for topic, metrics := range metricsPerTopic {
-			for _, metric := range metrics {
-				objectsWritten.Add(float64(1))
-				err := writer.WriteMessages(context.Background(), kafka.Message{
-					Topic: topic,
-					Value: metric,
-				})
-				if err != nil {
-					objectsFailed.Add(float64(1))
-					c.AbortWithStatus(http.StatusInternalServerError)
-					logrus.WithError(err).Debug(fmt.Sprintf("Failing metric %v", metric))
-					logrus.WithError(err).Error(fmt.Sprintf("couldn't produce message in kafka topic %v", topic))
-					return
-				}
+		for _, metric := range metrics {
+			objectsWritten.Add(float64(1))
+			err := writer.WriteMessages(context.Background(), kafka.Message{
+				Value: metric,
+			})
+			if err != nil {
+				objectsFailed.Add(float64(1))
+				c.AbortWithStatus(http.StatusInternalServerError)
+				logrus.WithError(err).Debug(fmt.Sprintf("Failing metric %v", metric))
+				logrus.WithError(err).Error(fmt.Sprintf("couldn't produce message in kafka topic %v", kafkaTopic))
+				return
 			}
 		}
 	}

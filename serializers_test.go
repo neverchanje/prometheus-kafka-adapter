@@ -42,7 +42,7 @@ func TestSerializeToJSON(t *testing.T) {
 
 	writeRequest := NewWriteRequest()
 	output, err := Serialize(serializer, writeRequest)
-	assert.Len(t, output["metrics"], 2)
+	assert.Len(t, output, 2)
 	assert.Nil(t, err)
 
 	expectedSamples := []string{
@@ -50,7 +50,7 @@ func TestSerializeToJSON(t *testing.T) {
 		"{\"value\":\"+Inf\",\"timestamp\":\"1970-01-01T00:00:10Z\",\"name\":\"foo\",\"labels\":{\"__name__\":\"foo\",\"labelfoo\":\"label-bar\"}}",
 	}
 
-	for i, metric := range output["metrics"] {
+	for i, metric := range output {
 		assert.JSONEqf(t, expectedSamples[i], string(metric[:]), "wrong json serialization found")
 	}
 }
@@ -72,7 +72,7 @@ func TestSerializeToAvro(t *testing.T) {
 
 	writeRequest := NewWriteRequest()
 	output, err := Serialize(serializer, writeRequest)
-	assert.Len(t, output["metrics"], 2)
+	assert.Len(t, output, 2)
 	assert.Nil(t, err)
 
 	expectedSamples := []string{
@@ -80,23 +80,8 @@ func TestSerializeToAvro(t *testing.T) {
 		"{\"value\":\"+Inf\",\"timestamp\":\"1970-01-01T00:00:10Z\",\"name\":\"foo\",\"labels\":{\"__name__\":\"foo\",\"labelfoo\":\"label-bar\"}}",
 	}
 
-	for i, metric := range output["metrics"] {
+	for i, metric := range output {
 		assert.JSONEqf(t, expectedSamples[i], string(metric[:]), "wrong json serialization found")
-	}
-}
-
-func TestTemplatedTopic(t *testing.T) {
-	var err error
-	topicTemplate, err = parseTopicTemplate("{{ index . \"labelfoo\" | replace \"bar\" \"foo\" | substring 6 -1 }}")
-	assert.Nil(t, err)
-	serializer, err := NewJSONSerializer()
-	assert.Nil(t, err)
-
-	writeRequest := NewWriteRequest()
-	output, err := Serialize(serializer, writeRequest)
-
-	for k := range output {
-		assert.Equal(t, "foo", k, "templated topic failed")
 	}
 }
 
@@ -137,7 +122,7 @@ func BenchmarkSerializeToAvroJSON(b *testing.B) {
 	writeRequest := NewWriteRequest()
 
 	for n := 0; n < 20000; n++ {
-		Serialize(serializer, writeRequest)
+		_, _ = Serialize(serializer, writeRequest)
 	}
 }
 
@@ -146,6 +131,6 @@ func BenchmarkSerializeToJSON(b *testing.B) {
 	writeRequest := NewWriteRequest()
 
 	for n := 0; n < 20000; n++ {
-		Serialize(serializer, writeRequest)
+		_, _ = Serialize(serializer, writeRequest)
 	}
 }

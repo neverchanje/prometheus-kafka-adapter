@@ -41,10 +41,11 @@ func main() {
 	}
 
 	writer := &kafka.Writer{
-		Addr:        kafka.TCP(strings.Split(kafkaBrokerList, ",")...),
-		Topic:       kafkaTopic,
-		BatchSize:   kafkaBatchNumMessages,
-		Compression: compression,
+		Addr:                   kafka.TCP(strings.Split(kafkaBrokerList, ",")...),
+		BatchSize:              kafkaBatchNumMessages,
+		Compression:            compression,
+		Topic:                  kafkaTopic,
+		AllowAutoTopicCreation: true,
 	}
 
 	r := gin.New()
