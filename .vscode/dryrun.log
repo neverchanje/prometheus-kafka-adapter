@@ -1,0 +1,10 @@
+make --dry-run --always-make --keep-going --print-directory
+make: Entering directory `/Users/wutao/git/prometheus-kafka-adapter'
+docker run --rm -v /Users/wutao/git/prometheus-kafka-adapter:/app:z -w /app golang:1.17.5-alpine gofmt -l -w -s *.go
+docker run --rm -v /Users/wutao/git/prometheus-kafka-adapter:/app:z -w /app golang:1.17.5-alpine sh tools/testscript.sh vet
+docker run --rm -v /Users/wutao/git/prometheus-kafka-adapter:/app:z -w /app golang:1.17.5-alpine sh tools/testscript.sh test
+docker run --rm -v /Users/wutao/git/prometheus-kafka-adapter:/app:z -w /app golang:1.17.5-buster sh tools/buildscript.sh prometheus-kafka-adapter
+docker run --rm -v /Users/wutao/git/prometheus-kafka-adapter:/app:z -w /app golang:1.17.5-alpine sh tools/buildscript.sh prometheus-kafka-adapter
+docker build -t telefonica/prometheus-kafka-adapter:latest .
+make: Leaving directory `/Users/wutao/git/prometheus-kafka-adapter'
+ 
